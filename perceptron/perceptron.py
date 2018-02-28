@@ -8,6 +8,8 @@ from base.base_learning import BaseLearning
 class Perceptron(BaseLearning):
     """
         Perceptron
+        Created by:
+        ~razgrizone (Pedro Pereira)
     """
     class PerceptronError(Exception):
         pass
@@ -106,5 +108,5 @@ if __name__ == '__main__':
     from data import INPUT, RESULTS
 
     p = Perceptron(INPUT, RESULTS)
-    p.train(10000)
+    p.train(30000)
     print(p.statistics())
