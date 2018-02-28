@@ -1,5 +1,5 @@
 import random
-plane = lambda x,y,z: 5*x - 8*y + z + 5
+plane = lambda x,y,z: 5 + 5*x - 8*y + z
 inputs = list()
 results = list()
 
@@ -14,5 +14,6 @@ for i in range(5000):
     else:
         results.append(False)
 
-print(inputs, '\n' * 20)
-print(results)
+with open('data.py', 'w') as f:
+    f.write('INPUT = ' + str(inputs) + '\n')
+    f.write('RESULTS = ' + str(results) + '\n')

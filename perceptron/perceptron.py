@@ -12,17 +12,21 @@ class Perceptron(BaseLearning):
         ~razgrizone (Pedro Pereira)
     """
     class PerceptronError(Exception):
+        """ Common class for errors thrown by perceptron. """
         pass
 
-    def __init__(self, data, results):
+    def __init__(self, data, results, weights=None):
         """
             Initializes a perceptron algorithm instance.
             data (list|tuple)    -> list containing points in nth-dimension.
                                     example: [(0.3, 0.5, 3), (4.3, 4.9, 1)]
             results (list|tuple) -> list containing the answers for the data.
                                     example: [True, True, False]
+            weights (list)       -> initializes weights as set, instead of
+                                    random numbers.
             constraint: len(data) == len(results)
             constraint: len(data[0]) == len(data[1]) == len(data[2])...
+            constraint: len(data[0]) + 1 == len(weights)
         """
         if type(data) is not list and type(data) is not tuple:
             raise PerceptronError('data must be a list or a tuple')
@@ -32,20 +36,30 @@ class Perceptron(BaseLearning):
             raise PerceptronError('data and results must be of equal length')
 
         self.data = list(data)
+        # For now a constant
+        self.shuffle_amount = 500
         self.results = results
         self.dimensions = len(data[0]) + 1
         for i in data:
             if len(i) != self.dimensions - 1:
                 raise PerceptronError('data is not consistent in dimensions')
-        self.weights = [random.random() * 10 for i in range(self.dimensions)]
+        if weights:
+            if len(weights) != self.dimensions:
+                raise PerceptronError('Weights do not have the correct '
+                                      'dimension. expected'
+                                      + str(self.dimensions))
+            self.weights = weights
+        else:
+            self.weights = [random.random() * 10 for i in range(self.dimensions)]
 
     def train(self, rounds=10000):
         """
             Trains with data for `rounds` amount of rounds.
         """
         for round_number in range(rounds):
+            # shuffle its own data
             # so that it doesn't stay in the same numbers
-            random.shuffle(self.data)
+            self.__shuffle()
             for datapoint, answer in zip(self.data, self.results):
                 signal = self.__apply_function(datapoint) >= 0
                 if signal != answer:
@@ -82,7 +96,8 @@ class Perceptron(BaseLearning):
                 hits += 1
 
         statistics = {
-            'percentage_hits': round(hits*100/all_data, 2)
+            'percentage_hits': round(hits*100/all_data, 2),
+            'weights': self.weights
         }
         return statistics
 
@@ -99,10 +114,18 @@ class Perceptron(BaseLearning):
         """ adjusts datapoint like w <- w + xi * yi """
         # w += xi * yi
         adjust = 1 if answer else -1
-        self.weights[0] += adjust # treshold
+        self.weights[0] += adjust * 1 # treshold
         for i in range(1, len(self.weights)):
             self.weights[i] += datapoint[i - 1] * adjust
 
+    def __shuffle(self):
+        # shuffles self.shuffle times
+        for i in range(self.shuffle_amount):
+            # finds two and swap
+            a = random.randint(0, len(self.data) - 1)
+            b = random.randint(0, len(self.data) - 1)
+            self.data[a], self.data[b] = self.data[b], self.data[a]
+            self.results[a], self.results[b] = self.results[b], self.results[a]
 
 if __name__ == '__main__':
     from data import INPUT, RESULTS
