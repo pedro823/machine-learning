@@ -1,1 +1,1 @@
-from examples.data_boolean_or import INPUT, RESULTS
+from examples.data_plane_3d import INPUT, RESULTS

@@ -55,6 +55,8 @@ class Perceptron(BaseLearning):
     def train(self, rounds=10000):
         """
             Trains with data for `rounds` amount of rounds.
+            Returns how many rounds it actually trained
+            (if it was fully fit before `rounds` rounds, it stops).
         """
         for round_number in range(rounds):
             # shuffle its own data
@@ -69,7 +71,8 @@ class Perceptron(BaseLearning):
             else:
                 # no incorrect answer was found: dataset
                 # is fully fit with current weights
-                break
+                return round_number + 1
+        return rounds
 
     def apply(self, datapoint):
         """
@@ -131,5 +134,5 @@ if __name__ == '__main__':
     from data import INPUT, RESULTS
 
     p = Perceptron(INPUT, RESULTS)
-    p.train(30000)
-    print(p.statistics())
+    amount_rounds = p.train(30000)
+    print(p.statistics(), 'rounds trained =', amount_rounds)
