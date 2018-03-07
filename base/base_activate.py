@@ -1,13 +1,13 @@
 import numpy as np
 
-class activate:
+class Activate:
     @staticmethod
     def sigmoid(x):
         return 1/(1 + np.exp(-x))
 
     @staticmethod
     def dsigmoid(x):
-        s = activate.sigmoid(x)
+        s = Activate.sigmoid(x)
         return s*(1-s)
 
     @staticmethod
@@ -16,4 +16,4 @@ class activate:
 
     @staticmethod
     def dtanh(x):
-        return 1 - activate.tanh(x)**2
+        return 1 - Activate.tanh(x)**2
