@@ -20,7 +20,8 @@ class Perceptron(BaseLearning):
             Initializes a perceptron algorithm instance.
             data (list|tuple)    -> list containing points in nth-dimension.
                                     example: [(0.3, 0.5, 3), (4.3, 4.9, 1)]
-            results (list|tuple) -> list containing the answers for the data.
+            results (list|tuple) -> list of booleans containing the answers
+                                    for the data.
                                     example: [True, True, False]
             weights (list)       -> initializes weights as set, instead of
                                     random numbers.
@@ -28,7 +29,7 @@ class Perceptron(BaseLearning):
             constraint: len(data[0]) == len(data[1]) == len(data[2])...
             constraint: len(data[0]) + 1 == len(weights)
         """
-        if type(data) is not list and type(data) is not tuple:
+        if type(data) not in (list, tuple):
             raise PerceptronError('data must be a list or a tuple')
         if len(data) < 1:
             raise PerceptronError('data must not be empty')
@@ -38,7 +39,7 @@ class Perceptron(BaseLearning):
         self.data = list(data)
         # For now a constant
         self.shuffle_amount = 500
-        self.results = results
+        self.results = list(results)
         self.dimensions = len(data[0]) + 1
         for i in data:
             if len(i) != self.dimensions - 1:
@@ -55,17 +56,17 @@ class Perceptron(BaseLearning):
     def train(self, rounds=10000):
         """
             Trains with data for `rounds` amount of rounds.
-            Returns how many rounds it actually trained
-            (if it was fully fit before `rounds` rounds, it stops).
+            (if it is fully fit before `rounds` rounds, it stops).
+            Returns: (int) the number of rounds that actually ran.
         """
         for round_number in range(rounds):
             # shuffle its own data
             # so that it doesn't stay in the same numbers
-            self.__shuffle()
+            self._shuffle()
             for datapoint, answer in zip(self.data, self.results):
-                signal = self.__apply_function(datapoint) >= 0
+                signal = self._apply_function(datapoint) >= 0
                 if signal != answer:
-                    self.__adjust(datapoint, answer)
+                    self._adjust(datapoint, answer)
                     # Adjusted once, go to next round
                     break
             else:
@@ -82,7 +83,12 @@ class Perceptron(BaseLearning):
             returns:
                 prediction (-1 or 1)
         """
-        s = self.__apply_function(datapoint)
+        if type(datapoint) not in (list, tuple):
+            raise PerceptronError('datapoint is not a list or a tuple')
+        if len(datapoint) != self.dimensions - 1:
+            raise PerceptronError('datapoint does not have the correct'
+                                  'dimension. Expected', self.dimensions - 1)
+        s = self._apply_function(datapoint)
         return 1 if s >= 0 else -1
 
     def statistics(self):
@@ -90,11 +96,13 @@ class Perceptron(BaseLearning):
             All statistics available:
             percentage_hits -> percentage of correct predictions
                                in initial input data
+            weights         -> the final weights calculated in
+                               perceptron algorithm.
         """
         all_data = len(self.data)
         hits = 0
         for data, result in zip(self.data, self.results):
-            signal = self.__apply_function(data) >= 0
+            signal = self._apply_function(data) >= 0
             if signal == result:
                 hits += 1
 
@@ -104,16 +112,16 @@ class Perceptron(BaseLearning):
         }
         return statistics
 
-    # private
+    # private, heritable
 
-    def __apply_function(self, datapoint):
+    def _apply_function(self, datapoint):
         """ applies sum(wi * xi) """
         s = self.weights[0] # 1 * w[0]
         for wi, xi in zip(self.weights[1:], datapoint):
             s += wi * xi
         return s
 
-    def __adjust(self, datapoint, answer):
+    def _adjust(self, datapoint, answer):
         """ adjusts datapoint like w <- w + xi * yi """
         # w += xi * yi
         adjust = 1 if answer else -1
@@ -121,7 +129,8 @@ class Perceptron(BaseLearning):
         for i in range(1, len(self.weights)):
             self.weights[i] += datapoint[i - 1] * adjust
 
-    def __shuffle(self):
+    def _shuffle(self):
+        """ Shuffles internal dataset """
         # shuffles self.shuffle times
         for i in range(self.shuffle_amount):
             # finds two and swap

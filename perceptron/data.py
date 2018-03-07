@@ -1,1 +1,1 @@
-from examples.data_plane_3d import INPUT, RESULTS
+from examples.wobbly import INPUT, RESULTS
