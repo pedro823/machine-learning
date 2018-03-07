@@ -8,6 +8,15 @@ Currently contains these algorithms and models:
 + Neural network  
   (network/network.py)
 
+
+### To setup your environment ###
+
+Install all dependencies using `pip`:
+
+```
+$ pip install requirements.txt
+```
+
 ### To run an algorithm ###
 
 use `run/run_[algorithm_you_want].sh`

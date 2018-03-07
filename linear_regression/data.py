@@ -1,1 +1,1 @@
-from examples.data_plane_3d.py import INPUT, RESULTS
+from examples.data_2d_quadratic import INPUT, RESULTS

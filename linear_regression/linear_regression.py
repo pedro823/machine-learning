@@ -1,7 +1,9 @@
+import numpy as np
+# Adds higher directory to python modules path.
 import sys
 import os
-# Adds higher directory to python modules path.
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# local inclusions
 from base.base_learning import BaseLearning
 
 class LinearRegresionMatrix(BaseLearning):
@@ -10,6 +12,7 @@ class LinearRegresionMatrix(BaseLearning):
         Created By:
         ~razgrizone (Pedro Pereira)
     """
+
 
     class LinearRegresionError(Exception):
         """ Common class for errors thrown by LinearRegression. """
@@ -25,7 +28,6 @@ class LinearRegresionMatrix(BaseLearning):
             constraint: len(data) == len(results)
             constraint: len(data[0]) == len(data[1]) == len(data[2])...
         """
-        import numpy as np
 
         self.X = self.build_matrix(data)
         self.data = list(data)
@@ -63,14 +65,15 @@ class LinearRegresionMatrix(BaseLearning):
         """
             Applies linear regression to datapoint.
         """
+        # transposed(w) * x
         if self.pseudo_inverse_X is None:
             raise LinearRegresionError('LinearRegression was not trained.'
                                        ' Use train() before using apply()')
         data_matrix = self.build_matrix(datapoint)
-        value = self.pseudo_inverse_X * data_matrix
+        value = np.transpose(self.pseudo_inverse_X) * data_matrix
         return value.item((0, 0))
 
-    @classfunction
+    @classmethod
     def build_matrix(cls, data):
         """
             Builds X based on initial data.
@@ -95,4 +98,4 @@ if __name__ == '__main__':
     from data import INPUT, RESULTS
     l = LinearRegresionMatrix(INPUT, RESULTS)
     l.train()
-    l.statistics()
+    print(l.statistics())
