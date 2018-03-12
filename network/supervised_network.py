@@ -8,13 +8,18 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from base.base_learning import BaseLearning
-from base.base_activate import activate as act
+from base.base_activate import Activate as act
 
 epoch = 0
 side = 40
 ratio = 1
 
-class Network(BaseLearning):
+class SupervisedNetwork(BaseLearning):
+    """
+        Supervised Network
+        Created by:
+        IceMage144 (João Gabriel Basi)
+    """
     def __init__(self, numNeurons, activate="tanh"):
         if type(activate) == str:
             f = getattr(act, activate)
@@ -42,8 +47,17 @@ class Network(BaseLearning):
             hVals = self.activate[i][0](np.dot(hVals, self.weights[i]) + self.bias[i])
         return hVals
 
-    def statistics(self):
-        pass
+    def statistics(self, data):
+        error = 0
+        for p in data:
+            error += (self.apply(p[0]) - p[1])**2
+        statistics = {
+            "avg_error": error/len(data),
+            "error_sum": error,
+            "weights": self.weights,
+            "biases": self.bias
+        }
+        return statistics
 
     def train(self, inp, expected, lr=0.03):
         # Feedforward
@@ -72,14 +86,8 @@ class Network(BaseLearning):
     def copy(self):
         return copy.deepcopy(self)
 
-def quad(x):
-    return ((x[0] > 0 and x[1] < 0) or (x[0] < 0 and x[1] > 0))
-
-def dist(x):
-    return x[0]**2 + x[1]**2
-
 def xor_test():
-    nn = Network([2, 2, 1])
+    nn = SupervisedNetwork([2, 2, 1])
     x = [[[0, 0], [-1]],
          [[0, 1], [1]],
          [[1, 0], [1]],
@@ -98,11 +106,31 @@ def xor_test():
             nn.train(s[0], s[1])
         epoch += 100
         yield [[nn.apply(mat[i][j])[0] for i in range(side)] for j in range(side)]
-    animate(fig, c, epoch_text, update, nn)
+    def plot(update):
+        global epoch
+        c.set_data(update)
+        epoch_text.set_text(f"Epoch = {epoch}")
+        return c, epoch_text
+    ani = FuncAnimation(fig, plot, update, interval=50)
+    plt.ylim(0, side)
+    plt.xlim(0, side)
+    plt.show()
+    print(nn.weights)
+    print(nn.bias)
+    p = input("Point: ")
+    while p != "":
+        p = [float(i) for i in p.split()]
+        print(p)
+        print(nn.apply(p))
+        p = input("Point: ")
 
 
-def quad_test():
-    nn = Network([5, 2, 1])
+def test(case):
+    if case == "circ":
+        from circ_data import DATA
+    elif case == "quad":
+        from quad_data import DATA
+    nn = SupervisedNetwork([5, 2, 1])
     fig, ax = plt.subplots(figsize=(5, 5))
     mat = [[[ratio*(2*x/side - 1), ratio*(1 - 2*y/side), (ratio*(2*x/side - 1))**2, (ratio*(1 - 2*y/side))**2, ratio*(1 - 2*y/side)*ratio*(2*x/side - 1)] for x in range(side)] for y in range(side)]
     c = ax.imshow([[nn.apply(mat[i][j])[0] for i in range(side)] for j in range(side)],
@@ -112,40 +140,10 @@ def quad_test():
     epoch_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
     def update():
         global epoch
-        for i in range(100):
-            p = [ratio*(random.random()*2-1), ratio*(random.random()*2-1)]
-            p.append(p[0]**2)
-            p.append(p[1]**2)
-            p.append(p[0]*p[1])
-            nn.train(p, [1 if quad(p) else -1])
-        epoch += 100
+        for i in range(50):
+            nn.train(DATA[epoch%len(DATA)][0], DATA[epoch%len(DATA)][1])
+            epoch += 1
         yield [[nn.apply(mat[i][j])[0] for i in range(side)] for j in range(side)]
-    animate(fig, c, epoch_text, update, nn)
-
-def circ_test():
-    nn = Network([5, 2, 1])
-    fig, ax = plt.subplots(figsize=(5, 5))
-    mat = [[[ratio*(2*x/side - 1), ratio*(1 - 2*y/side), (ratio*(2*x/side - 1))**2, (ratio*(1 - 2*y/side))**2, ratio*(1 - 2*y/side)*ratio*(2*x/side - 1)] for x in range(side)] for y in range(side)]
-    c = ax.imshow([[nn.apply(mat[i][j])[0] for i in range(side)] for j in range(side)],
-                  interpolation='nearest',
-                  aspect='auto',
-                  cmap='RdYlGn')
-    epoch_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
-    def update():
-        global epoch
-        for i in range(100):
-            theta = random.random()*6.2831
-            r = random.random()
-            p = [r*math.cos(theta), r*math.sin(theta)]
-            p.append(p[0]**2)
-            p.append(p[1]**2)
-            p.append(p[0]*p[1])
-            nn.train(p, [1 if r < 0.5 else -1])
-        epoch += 100
-        yield [[nn.apply(mat[i][j])[0] for i in range(side)] for j in range(side)]
-    animate(fig, c, epoch_text, update, nn)
-
-def animate(fig, c, epoch_text, update, nn):
     def plot(update):
         global epoch
         c.set_data(update)
@@ -168,6 +166,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] == "xor":
         xor_test()
     elif sys.argv[1] == "quad":
-        quad_test()
+        test("quad")
     elif sys.argv[1] == "circ":
-        circ_test()
+        test("circ")
