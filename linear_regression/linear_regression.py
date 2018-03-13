@@ -33,6 +33,7 @@ class LinearRegresionMatrix(BaseLearning):
         self.data = list(data)
         self.results = list(results)
         self.pseudo_inverse_X = None
+        self.plane = None
 
     def train(self):
         """
@@ -40,6 +41,10 @@ class LinearRegresionMatrix(BaseLearning):
             pseudo-inverse of X)
         """
         self.pseudo_inverse_X = np.linalg.pinv(self.X)
+        print(self.pseudo_inverse_X)
+        y = np.array([[i] for i in self.results])
+        self.plane = (self.pseudo_inverse_X * y).tolist()
+        self.plane = [i[0] for i in self.plane]
 
     def statistics(self):
         """
@@ -57,21 +62,26 @@ class LinearRegresionMatrix(BaseLearning):
             squared_error += (self.apply(datapoint) - result)**2
         statistics = {
             'pseudo_inverse': np.matrix.tolist(self.pseudo_inverse_X),
-            'squared_error': squared_error
+            'squared_error': squared_error,
+            'avg_squared_error': squared_error / len(self.results)
         }
         return statistics
 
     def apply(self, datapoint):
         """
             Applies linear regression to datapoint.
+            datapoint (list) -> A data point with the same dimension of
+                                the initial data list.
+                                example: [4, 3, 4]
+            returns: the prediction of the value of the datapoint.
         """
         # transposed(w) * x
         if self.pseudo_inverse_X is None:
             raise LinearRegresionError('LinearRegression was not trained.'
                                        ' Use train() before using apply()')
-        data_matrix = self.build_matrix(datapoint)
-        value = np.transpose(self.pseudo_inverse_X) * data_matrix
-        return value.item((0, 0))
+        s = self.plane[0]
+        s += sum([self.plane[idx + 1] * x for idx, x in enumerate(datapoint)])
+        return s
 
     @classmethod
     def build_matrix(cls, data):
@@ -87,7 +97,7 @@ class LinearRegresionMatrix(BaseLearning):
                 ]
         """
         try:
-            return np.matrix(data)
+            return np.matrix([[1] + i for i in data])
         except TypeError as ex:
             raise LinearRegresionError('numpy error: '
                                        + str(ex)
